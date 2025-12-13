@@ -34,6 +34,8 @@ from rfd3.utils.io import (
     find_files_with_extension,
 )
 
+from rfd3.utils.add_oxt import add_oxt_each_chain
+
 logging.basicConfig(level=logging.INFO)
 ranked_logger = RankedLogger(__name__, rank_zero_only=True)
 
@@ -93,6 +95,10 @@ class RFD3Output:
     example_id: str
     denoised_trajectory_stack: Optional[AtomArrayStack] = None
     noisy_trajectory_stack: Optional[AtomArrayStack] = None
+
+    # Automatically process atom_array to add OXT atoms
+    def __post_init__(self):
+        self.atom_array = add_oxt_each_chain(self.atom_array)
 
     def dump(
         self,

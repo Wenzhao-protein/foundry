@@ -1,4 +1,4 @@
-from biotite.structure import Atom, AtomArray
+from biotite.structure import Atom, AtomArray, array, concatenate
 import numpy as np
 
 def add_oxt_each_chain(atom_array):
@@ -22,7 +22,7 @@ def add_oxt_each_chain(atom_array):
         updated_chains.append(updated_chain)
     
     # Concatenate all processed chains back into a single AtomArray
-    return AtomArray.concatenate(updated_chains)
+    return concatenate(updated_chains)
 
 
 def add_oxt_to_chain(chain_array):
@@ -35,6 +35,13 @@ def add_oxt_to_chain(chain_array):
     Returns:
         AtomArray: Updated AtomArray for the chain with OXT added if applicable.
     """
+    # Require is_protein annotation
+    is_protein_ann = getattr(chain_array, "is_protein", None)
+    if is_protein_ann is None:
+        raise ValueError("atom_array is missing required 'is_protein' annotation")
+    if not bool(np.all(is_protein_ann)):
+        return chain_array  # Skip non-protein chains
+
     # Identify the C-terminal residue
     c_terminal_res_id = np.max(chain_array.res_id)
     c_terminal_mask = chain_array.res_id == c_terminal_res_id
@@ -59,13 +66,15 @@ def add_oxt_to_chain(chain_array):
     oxt_atom = Atom(
         coord=oxt_coord,
         atom_name="OXT",
-        res_id=c_terminal_res_id,
-        chain_id=chain_array.chain_id[0],  # Use the chain ID from the chain
+        res_id=c_terminal_atoms.res_id[0],
+        res_name=c_terminal_atoms.res_name[0],
+        chain_id=c_terminal_atoms.chain_id[0],  # Use the chain ID from the chain
         element="O",
+        hetero=False,
     )
     
     # Append OXT atom to the chain
-    return AtomArray.concatenate([chain_array, oxt_atom])
+    return concatenate([chain_array, array([oxt_atom])])
 
 
 def calculate_oxt_coord(o_coord, ca_coord, c_coord):

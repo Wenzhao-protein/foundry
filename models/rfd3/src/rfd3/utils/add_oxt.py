@@ -83,7 +83,7 @@ def calculate_oxt_coord(o_coord, ca_coord, c_coord):
     """
     # Calculate the vector from C to CA and O
     c_ca_vector = ca_coord - c_coord
-    o_c_vector = o_coord - c_coord
+    o_c_vector = c_coord - o_coord
     
     # Reflect O around the C-CA vector to get OXT
     oxt_vector = o_c_vector - 2 * np.dot(o_c_vector, c_ca_vector) / np.linalg.norm(c_ca_vector)**2 * c_ca_vector

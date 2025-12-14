@@ -1,6 +1,7 @@
 from biotite.structure import Atom, AtomArray, array, concatenate
 import numpy as np
 
+
 def add_oxt_each_chain(atom_array):
     """
     Add a missing OXT atom to the C-terminus of each protein chain in the array.
@@ -13,13 +14,13 @@ def add_oxt_each_chain(atom_array):
     """
     updated_chains = []
     chain_ids = np.unique(atom_array.chain_id)
-    
+
     for chain_id in chain_ids:
         chain_mask = atom_array.chain_id == chain_id
         chain_array = atom_array[chain_mask]
         updated_chain = add_oxt_to_chain(chain_array)
         updated_chains.append(updated_chain)
-    
+
     # Reassemble the processed chains into a single AtomArray
     return concatenate(updated_chains)
 
@@ -45,11 +46,11 @@ def add_oxt_to_chain(chain_array):
     c_terminal_res_id = np.max(chain_array.res_id)
     c_terminal_mask = chain_array.res_id == c_terminal_res_id
     c_terminal_atoms = chain_array[c_terminal_mask]
-    
+
     # If OXT already exists, return unchanged
     if "OXT" in c_terminal_atoms.atom_name.tolist():
         return chain_array
-    
+
     # Extract coordinates for the required atoms; skip if any are missing
     try:
         c_coord = c_terminal_atoms.coord[c_terminal_atoms.atom_name == "C"][0]
@@ -60,7 +61,7 @@ def add_oxt_to_chain(chain_array):
 
     # Calculate OXT coordinates via reflection about the C–CA vector
     oxt_coord = calculate_oxt_coord(o_coord, ca_coord, c_coord)
-    
+
     # Construct the new OXT atom
     oxt_atom = Atom(
         coord=oxt_coord,
@@ -71,7 +72,7 @@ def add_oxt_to_chain(chain_array):
         element="O",
         hetero=False,
     )
-    
+
     # Append OXT to the chain and return
     return concatenate([chain_array, array([oxt_atom])])
 
@@ -91,9 +92,15 @@ def calculate_oxt_coord(o_coord, ca_coord, c_coord):
     # Vectors from C to CA and from O toward C
     c_ca_vector = ca_coord - c_coord
     o_c_vector = c_coord - o_coord
-    
+
     # Reflect O about the C–CA vector to position OXT
-    oxt_vector = o_c_vector - 2 * np.dot(o_c_vector, c_ca_vector) / np.linalg.norm(c_ca_vector)**2 * c_ca_vector
+    oxt_vector = (
+        o_c_vector
+        - 2
+        * np.dot(o_c_vector, c_ca_vector)
+        / np.linalg.norm(c_ca_vector) ** 2
+        * c_ca_vector
+    )
     oxt_coord = c_coord + oxt_vector
-    
+
     return oxt_coord

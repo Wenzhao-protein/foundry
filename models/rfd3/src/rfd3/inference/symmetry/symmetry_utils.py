@@ -96,9 +96,9 @@ def make_symmetric_atom_array(
 
     # If the motif is symmetric, we get the frames instead from the source atom array.
     if sym_conf.is_symmetric_motif:
-        assert (
-            src_atom_array is not None
-        ), "Source atom array must be provided for symmetric motifs"
+        assert src_atom_array is not None, (
+            "Source atom array must be provided for symmetric motifs"
+        )
         frames = get_symmetry_frames_from_atom_array(src_atom_array, frames)
     elif sym_conf.is_symmetric_motif is None:
         ranked_logger.info(
